@@ -15,6 +15,17 @@ public class ApplicationDbContext : DbContext
     public DbSet<Transaction> Transactions { get; set; } = null!;
     public DbSet<TransactionItem> TransactionItems { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
+    
+    // New entities for design patterns and features
+    public DbSet<Order> Orders { get; set; } = null!;
+    public DbSet<OrderItem> OrderItems { get; set; } = null!;
+    public DbSet<OrderCustomization> OrderCustomizations { get; set; } = null!;
+    public DbSet<Customer> Customers { get; set; } = null!;
+    public DbSet<Table> Tables { get; set; } = null!;
+    public DbSet<MenuCategory> MenuCategories { get; set; } = null!;
+    public DbSet<ComboMeal> ComboMeals { get; set; } = null!;
+    public DbSet<ComboMealItem> ComboMealItems { get; set; } = null!;
+    public DbSet<PaymentTransaction> PaymentTransactions { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,8 +67,10 @@ public class ApplicationDbContext : DbContext
         });
 
         ConfigureUser(modelBuilder);
+        ConfigureNewEntities(modelBuilder);
         SeedData(modelBuilder);
         SeedUsers(modelBuilder);
+        SeedNewEntities(modelBuilder);
     }
 
     private void ConfigureUser(ModelBuilder modelBuilder)
@@ -181,6 +194,148 @@ public class ApplicationDbContext : DbContext
                 Email = "admin@keimhean.cafe",
                 CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
+        );
+    }
+
+    private void ConfigureNewEntities(ModelBuilder modelBuilder)
+    {
+        // Configure Order
+        modelBuilder.Entity<Order>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.OrderNumber).IsRequired().HasMaxLength(50);
+            entity.HasIndex(e => e.OrderNumber).IsUnique();
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.CreatedAt);
+
+            entity.HasOne(e => e.Customer)
+                .WithMany(c => c.Orders)
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.Table)
+                .WithMany(t => t.Orders)
+                .HasForeignKey(e => e.TableId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasMany(e => e.Items)
+                .WithOne(i => i.Order)
+                .HasForeignKey(i => i.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure OrderItem
+        modelBuilder.Entity<OrderItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.OrderId);
+            
+            entity.HasMany(e => e.Customizations)
+                .WithOne(c => c.OrderItem)
+                .HasForeignKey(c => c.OrderItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure Customer
+        modelBuilder.Entity<Customer>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Phone).IsUnique();
+            entity.HasIndex(e => e.Email).IsUnique();
+        });
+
+        // Configure Table
+        modelBuilder.Entity<Table>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.TableNumber).IsUnique();
+            entity.HasIndex(e => e.Status);
+        });
+
+        // Configure MenuCategory
+        modelBuilder.Entity<MenuCategory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            
+            entity.HasOne(e => e.ParentCategory)
+                .WithMany(p => p.SubCategories)
+                .HasForeignKey(e => e.ParentCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(e => e.Products)
+                .WithOne(p => p.MenuCategory)
+                .HasForeignKey(p => p.CategoryId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Configure ComboMeal
+        modelBuilder.Entity<ComboMeal>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            
+            entity.HasMany(e => e.Items)
+                .WithOne(i => i.ComboMeal)
+                .HasForeignKey(i => i.ComboMealId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure PaymentTransaction
+        modelBuilder.Entity<PaymentTransaction>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.TransactionNumber).IsUnique();
+            entity.HasIndex(e => e.Status);
+
+            entity.HasOne(e => e.Order)
+                .WithMany(o => o.PaymentTransactions)
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private void SeedNewEntities(ModelBuilder modelBuilder)
+    {
+        // Seed Menu Categories
+        modelBuilder.Entity<MenuCategory>().HasData(
+            new MenuCategory { Id = 1, Name = "Coffee", Description = "Hot and cold coffee beverages", DisplayOrder = 1, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new MenuCategory { Id = 2, Name = "Tea", Description = "Various tea selections", DisplayOrder = 2, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new MenuCategory { Id = 3, Name = "Pastry", Description = "Fresh baked pastries and cakes", DisplayOrder = 3, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new MenuCategory { Id = 4, Name = "Snack", Description = "Cookies, brownies and snacks", DisplayOrder = 4, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+        );
+
+        // Seed Tables
+        modelBuilder.Entity<Table>().HasData(
+            new Table { Id = 1, TableNumber = "T1", Capacity = 2, Section = "Main", Status = TableStatus.Available, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Table { Id = 2, TableNumber = "T2", Capacity = 4, Section = "Main", Status = TableStatus.Available, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Table { Id = 3, TableNumber = "T3", Capacity = 4, Section = "Main", Status = TableStatus.Available, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Table { Id = 4, TableNumber = "T4", Capacity = 6, Section = "Main", Status = TableStatus.Available, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Table { Id = 5, TableNumber = "T5", Capacity = 2, Section = "Outdoor", Status = TableStatus.Available, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Table { Id = 6, TableNumber = "T6", Capacity = 4, Section = "Outdoor", Status = TableStatus.Available, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Table { Id = 7, TableNumber = "VIP1", Capacity = 8, Section = "VIP", Status = TableStatus.Available, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Table { Id = 8, TableNumber = "VIP2", Capacity = 6, Section = "VIP", Status = TableStatus.Available, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+        );
+
+        // Seed Sample Customers
+        modelBuilder.Entity<Customer>().HasData(
+            new Customer { Id = 1, Name = "Sokha Chan", Phone = "+855123456789", Email = "sokha@example.com", LoyaltyPoints = 150, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new Customer { Id = 2, Name = "Dara Keo", Phone = "+855987654321", Email = "dara@example.com", LoyaltyPoints = 75, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+        );
+
+        // Seed Sample Combo Meals
+        modelBuilder.Entity<ComboMeal>().HasData(
+            new ComboMeal { Id = 1, Name = "Breakfast Combo", Description = "Coffee and Croissant", ComboPrice = 5.50m, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+            new ComboMeal { Id = 2, Name = "Afternoon Tea Set", Description = "Tea and Cake", ComboPrice = 7.50m, CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+        );
+
+        // Seed Sample Combo Meal Items
+        modelBuilder.Entity<ComboMealItem>().HasData(
+            // Breakfast Combo: Espresso + Croissant
+            new ComboMealItem { Id = 1, ComboMealId = 1, ProductId = 1, Quantity = 1 }, // Espresso
+            new ComboMealItem { Id = 2, ComboMealId = 1, ProductId = 15, Quantity = 1 }, // Croissant
+            
+            // Afternoon Tea Set: Green Tea + Chocolate Cake
+            new ComboMealItem { Id = 3, ComboMealId = 2, ProductId = 11, Quantity = 1 }, // Green Tea
+            new ComboMealItem { Id = 4, ComboMealId = 2, ProductId = 17, Quantity = 1 }  // Chocolate Cake
         );
     }
 }
