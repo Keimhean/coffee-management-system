@@ -31,7 +31,7 @@ Contents
 - Desktop POS UI (Avalonia)
 
 ## Prerequisites
-- .NET 9 SDK
+- .NET 10 SDK
 - Docker & Docker Compose (for MySQL local DB)
 
 # coffee-management-system
