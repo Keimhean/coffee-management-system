@@ -1,34 +1,93 @@
 
-# coffee-management-system
+# Keimhean Cafe POS - Restaurant Management System
 [![C#](https://img.shields.io/badge/C%23-239120?logo=csharp&logoColor=white)](https://learn.microsoft.com/en-us/dotnet/csharp/)
 [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![Avalonia](https://img.shields.io/badge/Avalonia-11.x-8B44AC)](https://avaloniaui.net/)
 [![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-[![HTML](https://img.shields.io/badge/HTML-E34F26?logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
-[![CSS](https://img.shields.io/badge/CSS-1572B6?logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
-[![Docker MySQL phpMyAdmin](https://img.shields.io/badge/Docker_MySQL_phpMyAdmin-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/_/phpmyadmin)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/_/phpmyadmin)
 
-
-Keimhean Cafe POS — Point-of-sale application for coffee shops built with Avalonia UI and .NET 9
-
-<!-- Screenshot(s): added login and desktop images -->
+**Keimhean Cafe POS** — A comprehensive Point-of-Sale restaurant management system built with Avalonia UI and .NET 9, demonstrating 5 design patterns for academic purposes.
 
 ![Desktop POS Screenshot](public/images/Web.png)
 
-Point-of-sale application for Keimhean Cafe — API, Desktop client, Web front-end.
+## 🎯 Project Overview
 
-Contents
-- `KeimheanCafePOS.sln` — solution containing API, Desktop, Web, Domain, Infrastructure, Application
-- `src/KeimheanCafePOS.API` — ASP.NET Web API
-- `src/KeimheanCafePOS.Desktop` — Avalonia desktop client (MVVM)
-- `src/KeimheanCafePOS.Web` — optional web UI
-- `.github/workflows/ci.yml` — GitHub Actions CI workflow
+This is an educational project demonstrating the implementation of **5 classic design patterns** in a real-world restaurant/cafe POS system:
+- 🎨 **Decorator** - Dynamic menu item customizations
+- 🌉 **Bridge** - Order types and payment methods separation
+- 🌲 **Composite** - Hierarchical menu structure
+- 🔌 **Adapter** - Payment gateway integration
+- 📋 **Prototype** - Object cloning for efficiency
 
-## Features
-- User authentication (seeded `staff` and `admin` users)
-- Products and transactions endpoints
-- Desktop POS UI (Avalonia)
+## ✨ Features
+
+### Current Features
+- ✅ User authentication (Staff & Admin roles)
+- ✅ Product catalog with 54 pre-seeded items
+- ✅ Transaction management
+- ✅ Desktop POS UI (Avalonia)
+- ✅ REST API
+- ✅ **5 Design Patterns** fully implemented
+
+### Planned Features (Database Ready)
+- 📋 Menu Management - Category CRUD, item customization
+- 🛒 Order Management - Create, update, clone orders
+- 🪑 Table Management - Visual layout, status management
+- 👥 Customer Management - Profiles, loyalty points
+- 💳 Payment Processing - Multiple methods, split payments
+- 📊 Reporting - Sales, analytics, exports
+
+## 🏗️ Design Patterns
+
+### 1. Decorator Pattern 🎨
+Add customizations dynamically to menu items without modifying their structure.
+
+```csharp
+IMenuItem espresso = new BaseMenuItem("Espresso", 3.00m);
+espresso = new MilkDecorator(espresso);        // +$0.50
+espresso = new ExtraShotDecorator(espresso);   // +$1.00
+// Result: "Espresso + Milk + Extra Shot" = $4.50
+```
+
+### 2. Bridge Pattern 🌉
+Separate order abstractions from payment implementations.
+
+```csharp
+var creditCard = new CreditCardPayment();
+var order = new DineInOrder(creditCard) { TotalAmount = 25.00m };
+order.ProcessPayment(); // Can switch payment methods at runtime
+```
+
+### 3. Composite Pattern 🌲
+Create hierarchical menu structures and combo meals.
+
+```csharp
+var category = new MenuCategory("Coffee");
+category.Add(new MenuItem("Espresso", 2.50m));
+
+var combo = new ComboMeal("Breakfast", 5.50m);
+combo.Add(new MenuItem("Coffee", 3.00m));
+combo.Add(new MenuItem("Croissant", 3.00m));
+```
+
+### 4. Adapter Pattern 🔌
+Integrate multiple payment gateways with unified interface.
+
+```csharp
+IPaymentGateway stripe = new StripeAdapter();
+IPaymentGateway aba = new ABAAdapter(); // Cambodia local
+var result = await stripe.ProcessPaymentAsync(request);
+```
+
+### 5. Prototype Pattern 📋
+Clone objects efficiently for repeat operations.
+
+```csharp
+var order = GetOrder(5);
+var clonedOrder = order.Clone(); // "Same as Table 5"
+```
+
+**📖 Full Documentation**: [docs/DesignPatterns.md](docs/DesignPatterns.md)
 
 ## Prerequisites
 - .NET 10 SDK
@@ -117,10 +176,40 @@ If you enable Docker publishing, add the Docker Hub secrets in the repository se
 - If your CI fails because of missing `Dockerfile`, either add one to `src/KeimheanCafePOS.API/` or remove the `docker-push` job from the workflow.
 - To keep the repository clean, avoid committing `bin/` and `obj/` folders — `.gitignore` has standard .NET ignores.
 
+## 📚 Documentation
+
+- [Quick Start Guide](docs/QUICKSTART.md) - Get up and running quickly
+- [Design Patterns](docs/DesignPatterns.md) - Detailed explanation of all 5 patterns
+- [Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md) - Current status and roadmap
+
+## 🗂️ Project Structure
+
+```
+├── src/
+│   ├── KeimheanCafePOS.Domain/          # Business logic & design patterns
+│   │   ├── DesignPatterns/              # 5 design patterns implementation
+│   │   └── Entities/                    # Database entities
+│   ├── KeimheanCafePOS.Infrastructure/  # Data access & adapters
+│   ├── KeimheanCafePOS.Application/     # Application services
+│   ├── KeimheanCafePOS.API/             # REST API
+│   └── KeimheanCafePOS.Desktop/         # Avalonia UI
+└── docs/                                 # Documentation
+```
+
+## 🎓 Academic Context
+
+This project is developed for an academic assignment requiring:
+- ✅ Implementation of at least 5 design patterns
+- ⏳ 6 complete features with CRUD operations
+- ⏳ Presentation/demo preparation
+- **Deadline**: Mid-March 2026
+
+**Status**: Design patterns complete, database schema ready, features in progress.
+
 ## Contributing
 
 - Open issues or PRs on the repository. Follow the existing project structure and run the local build steps before creating PRs.
 
 ## License
 
-- Add your license file (e.g., `LICENSE`) and update this section.
+Educational project for academic purposes.
